@@ -1,0 +1,46 @@
+int ldr_pin = A5;  // Pin para el sensor LDR
+int lm35_pin = A0; // Pin para el sensor LM35
+int water_pump_pin = 3;  // Pin de control del transistor
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(water_pump_pin, OUTPUT);
+}
+
+void loop() {
+  Serial.println("*******************************");
+
+  // Leer el nivel de luz y mapearlo de 0-1023 a 0-100%
+  int ldr_value = map(analogRead(ldr_pin), 1023, 0, 100, 0);
+  Serial.print("Luz: ");
+  Serial.print(ldr_value);
+  Serial.println("%");
+
+  // Leer la temperatura del LM35
+  int lm35_value = analogRead(lm35_pin);
+  Serial.print("Valor LM35: ");
+  Serial.println(lm35_value);  // Imprime el valor crudo del LM35 para diagnóstico
+
+  // Convertir la lectura del LM35 a grados Celsius
+  // LM35: 10mV por cada grado Celsius. Si el voltaje de referencia es 5V (1024 en A0), esto debería funcionar.
+  float temperature = (lm35_value * (5.0 / 560.0)) * 100.0;
+  
+  // Invertir el valor de temperatura (si está al revés)
+  temperature = 100.0 - temperature;  // Resta la temperatura de 100°C para invertir la relación
+
+  Serial.print("Temperatura : ");
+  Serial.print(temperature);
+  Serial.println(" °C");
+
+  // Encender la bomba si la luz es baja (< 30%) y la temperatura es mayor a 25°C
+  if (ldr_value < 30 && temperature > 25) {
+    digitalWrite(water_pump_pin, HIGH);
+    Serial.println("Irrigación activada");
+  } else {
+    digitalWrite(water_pump_pin, LOW);
+    Serial.println("Riego detenido");
+  }
+
+  Serial.println("*******************************");
+  delay(1000);  // Espera de 1 segundo
+}
